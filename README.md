@@ -30,7 +30,7 @@ A synthetic dataset generator for customer churn prediction training data. Creat
 | `avg_load_time` | float | Seconds |
 | `downtime_minutes` | int | 0–300 |
 | `product_usage_percent` | float | 0–100% |
-| **`customer_status`** | string | **`'active'` or `'inactive'`** |
+
 
 ## 🚀 Quick Start
 
@@ -83,8 +83,7 @@ The generator uses a rule-based scoring system with 11 behavioral indicators:
 | Product usage < 30% | +1 |
 
 **Churn Assignment:**
-- Score ≥ 5 → `customer_status = 'inactive'`
-- Score < 5 → `customer_status = 'active'`
+- Churn scoring logic has been updated (customer_status column removed)
 - 10% random noise added for realism
 
 ## 🔧 Customization
@@ -162,6 +161,48 @@ Generating 100 customer records...
 - pandas >= 1.3.0
 - numpy >= 1.20.0
 - faker >= 15.0.0
+
+---
+
+## 🕰️ NEW: Temporal Dataset Generation
+
+For advanced AI training, this project now supports **temporal customer lifecycle datasets**:
+
+### 🎯 Temporal Features
+- **Customer Evolution**: Behavior changes month-to-month
+- **Realistic Churn**: 2-3% monthly churn with observable patterns  
+- **Customer Acquisition**: New customers added each month
+- **Behavioral Patterns**: Login decline, support spikes before churn
+- **Outlier Behaviors**: ~5% customers with unique patterns
+
+### 🚀 Quick Start - Temporal
+```bash
+# Generate 12 months of evolving customer data
+python3 temporal_batch_generator.py
+
+# Custom temporal generation
+python3 temporal_batch_generator.py --initial-customers 1000 --monthly-new 50 --months 12
+
+# See analysis examples
+python3 temporal_usage_example.py
+```
+
+### 📊 What You Get
+```
+temporal_datasets/
+├── 202407.csv  # 1000 customers
+├── 202408.csv  # ~1047 customers (50 new, ~3 churned)
+├── 202409.csv  # ~1094 customers
+└── temporal_generation.log
+```
+
+### 🔬 Perfect for AI Training
+- **Time-series features** for churn prediction
+- **Early warning signals** 1-3 months before churn
+- **Customer segmentation** based on evolution patterns
+- **Intervention modeling** and retention campaigns
+
+📖 **Full Documentation**: See `TEMPORAL_README.md` for complete details.
 
 ---
 
