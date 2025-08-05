@@ -1,5 +1,21 @@
-# CSV files
+# Generated data files
 *.csv
+
+# Sensitive configuration files (contains domain-specific data)
+hosting_config.json
+
+# Generated output directories
+batch_datasets/
+temporal_datasets/
+datasets/
+temporal_data/
+test_*/
+
+# Legacy hardcoded files (deprecated)
+generate_churn_dataset.py
+churn_dataset_generator.ipynb
+batch_generate_datasets.py
+temporal_batch_generator.py
 
 # ZIP files
 *.zip
@@ -97,8 +113,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Data files
-*.json
+# Data files (but keep config JSONs)
 *.pkl
 *.pickle
 

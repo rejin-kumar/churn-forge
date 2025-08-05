@@ -1,0 +1,78 @@
+{
+  "dataset_config": {
+    "name": "Synthetic Dataset Generator Configuration",
+    "description": "Flexible configuration for generating synthetic datasets for any domain",
+    "version": "1.0",
+    
+    "generation_params": {
+      "n_records": 1000,
+      "random_seed": null,
+      "reference_date": "2024-12-01",
+      "output_filename": "synthetic_dataset.csv"
+    },
+    
+    "schema": {
+      "columns": [
+        {
+          "name": "column_name",
+          "type": "int|float|string|date|boolean",
+          "description": "Column description",
+          "generation_method": "random|calculated|lookup|correlated|sequential",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": null,
+            "max": null,
+            "choices": [],
+            "pattern": null,
+            "date_range": {"start": null, "end": null},
+            "formula": null,
+            "correlation_target": null,
+            "correlation_strength": null,
+            "distribution": "normal|uniform|exponential|beta"
+          }
+        }
+      ]
+    },
+    
+    "relationships": [
+      {
+        "type": "correlation|dependency|constraint",
+        "columns": ["col1", "col2"],
+        "rule": "mathematical expression or conditional logic",
+        "strength": 0.7
+      }
+    ],
+    
+    "target_logic": {
+      "target_column": "churn_status",
+      "scoring_rules": [
+        {
+          "name": "rule_name",
+          "condition": "column_name operator value",
+          "score_impact": 2,
+          "description": "Rule description"
+        }
+      ],
+      "override_rules": [
+        {
+          "type": "force_positive|force_negative",
+          "condition": "complex condition",
+          "description": "Override description"
+        }
+      ],
+      "noise_percentage": 0.1,
+      "threshold": {
+        "high_risk": 6,
+        "medium_risk": 3,
+        "low_risk": 0
+      }
+    },
+    
+    "data_quality": {
+      "missing_data_percentage": 0.05,
+      "outlier_percentage": 0.02,
+      "duplicate_percentage": 0.01
+    }
+  }
+} 

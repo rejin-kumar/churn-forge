@@ -1,143 +1,168 @@
 #!/usr/bin/env python3
 """
-Usage Examples for Batch Dataset Generator
+Usage Examples for Config-Based Batch Dataset Generator
 
-This file demonstrates how to use the batch dataset generator
-without actually running the generation (which takes time for 1M rows).
+This file demonstrates how to use the new configuration-based batch dataset generator
+for any domain with flexible JSON configuration.
 """
 
-from batch_generate_datasets import BatchDatasetGenerator
+from config_batch_generator import ConfigBatchGenerator
 
 
 def example_usage():
-    """Show different ways to use the batch generator."""
+    """Show different ways to use the config-based batch generator."""
     
-    print("📋 BATCH DATASET GENERATOR - USAGE EXAMPLES")
-    print("=" * 50)
+    print("📋 CONFIG-BASED BATCH DATASET GENERATOR - USAGE EXAMPLES")
+    print("=" * 60)
     
-    # Example 1: Default usage (1M rows per month)
-    print("\n1️⃣  DEFAULT USAGE:")
-    print("   Generates 13 datasets (July 2024 - July 2025)")
-    print("   Each dataset: 1,000,000 rows")
-    print("   Output: ./datasets/ directory")
+    # Example 1: Using template config (generic)
+    print("\n1️⃣  USING TEMPLATE CONFIG (Generic):")
+    print("   Generates datasets for any domain using template_config.json")
+    print("   Flexible schema and business rules")
+    print("   Output: ./batch_datasets/ directory")
     print("\n   Command:")
-    print("   python batch_generate_datasets.py")
+    print("   python3 config_batch_generator.py --config template_config.json --rows 10000 --num-months 3")
     
-    # Example 2: Custom parameters
-    print("\n2️⃣  CUSTOM PARAMETERS:")
-    print("   Custom row count, seed, and output directory")
+    # Example 2: Using hosting config (domain-specific)
+    print("\n2️⃣  USING HOSTING CONFIG (Domain-specific):")
+    print("   Generates hosting/domain service datasets with 50+ columns")
+    print("   Complex business logic and relationships")
     print("\n   Command:")
-    print("   python batch_generate_datasets.py --rows 500000 --seed 123 --output-dir my_datasets")
+    print("   python3 config_batch_generator.py --config template_config.json --rows 100000 --num-months 6")
     
-    # Example 3: Programmatic usage
-    print("\n3️⃣  PROGRAMMATIC USAGE:")
+    # Example 3: Custom batch config
+    print("\n3️⃣  USING BATCH CONFIG (Optimized for large datasets):")
+    print("   Pre-configured for batch processing with verification")
+    print("   Includes data quality checks and summary reports")
+    print("\n   Command:")
+    print("   python3 config_batch_generator.py --config batch_config.json --rows 1000000 --num-months 12 --verify")
+    
+    # Example 4: Custom output and verification
+    print("\n4️⃣  CUSTOM OUTPUT & VERIFICATION:")
+    print("   Custom directory, starting month, and full verification")
+    print("\n   Command:")
+    print("   python3 config_batch_generator.py --config template_config.json \\")
+    print("       --rows 50000 --num-months 6 --start-month 2024-01 \\")
+    print("       --output-dir my_datasets --verify --summary")
+    
+    print("\n" + "=" * 60)
+
+
+def programmatic_example():
+    """Show how to use the batch generator programmatically."""
+    
+    print("\n🐍 PROGRAMMATIC USAGE EXAMPLES")
+    print("=" * 60)
+    
+    print("\n💡 Example 1: Basic programmatic usage")
     print("""
-   from batch_generate_datasets import BatchDatasetGenerator
-   
-   # Create generator
-   generator = BatchDatasetGenerator(
-       rows_per_month=1000000,  # 1M rows per dataset
-       random_seed=42,          # For reproducible results
-       output_dir="datasets"    # Output directory
-   )
-   
-   # Generate all datasets
-   files = generator.generate_all_datasets()
-   
-   # Verify datasets
-   generator.verify_datasets(files)
-   """)
+from config_batch_generator import ConfigBatchGenerator
+
+# Create batch generator with any configuration
+generator = ConfigBatchGenerator(
+    config_path='template_config.json',
+    rows_per_month=10000,
+    random_seed=42,
+    output_dir='my_datasets'
+)
+
+# Generate 6 months of data
+files = generator.generate_all_datasets(
+    num_months=6,
+    start_month='2024-01',
+    verify=True
+)
+
+print(f"Generated {len(files)} files")
+""")
     
-    # Show expected outputs
-    print("\n📁 EXPECTED OUTPUT FILES:")
-    print("   The batch job will create these 13 files:")
-    
-    months = [
-        "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12",
-        "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07"
-    ]
-    
-    for month in months:
-        year, month_num = month.split("-")
-        filename = f"churn_dataset_{year}{month_num}.csv"
-        print(f"   • {filename}")
-    
-    # Show estimated details
-    print("\n📊 ESTIMATED DETAILS:")
-    print("   • Total datasets: 13")
-    print("   • Rows per dataset: 1,000,000")
-    print("   • Total rows: 13,000,000")
-    print("   • Estimated file size per dataset: ~230 MB")
-    print("   • Estimated total size: ~3 GB")
-    print("   • Estimated generation time: 20-30 minutes")
-    
-    # Command line options
-    print("\n⚙️  COMMAND LINE OPTIONS:")
-    options = [
-        ("--rows, -r", "Number of rows per dataset (default: 1,000,000)"),
-        ("--seed, -s", "Base random seed for reproducibility (default: 42)"),
-        ("--output-dir, -o", "Output directory (default: 'datasets')"),
-        ("--verify, -v", "Force verification of generated datasets"),
-        ("--no-verify", "Skip dataset verification"),
-        ("--help, -h", "Show help message")
-    ]
-    
-    for option, description in options:
-        print(f"   {option:<20} {description}")
+    print("\n💡 Example 2: Domain-specific generation")
+    print("""
+# E-commerce example using hosting config as base
+generator = ConfigBatchGenerator(
+            config_path='template_config.json',
+    rows_per_month=100000,
+    output_dir='ecommerce_data'
+)
+
+# Generate large datasets with verification
+files = generator.generate_all_datasets(
+    num_months=12,
+    verify=True,
+    no_skip_verification=True
+)
+
+# Generate summary report
+generator.generate_summary_report(files)
+""")
+
+    print("\n💡 Example 3: Custom configuration workflow")
+    print("""
+# 1. Create your custom config (JSON file)
+# 2. Use it with the batch generator
+
+generator = ConfigBatchGenerator(
+    config_path='my_custom_domain_config.json',
+    rows_per_month=50000
+)
+
+files = generator.generate_all_datasets(num_months=3)
+""")
 
 
-def show_month_details():
-    """Show details about each month that will be generated."""
-    print("\n📅 MONTHLY DATASET DETAILS:")
-    print("-" * 50)
+def configuration_examples():
+    """Show configuration file examples."""
     
-    # Create a generator instance to get the month dates
-    generator = BatchDatasetGenerator()
-    month_dates = generator.get_month_dates()
+    print("\n⚙️  CONFIGURATION FILE EXAMPLES")
+    print("=" * 60)
     
-    for i, (year, month, reference_date) in enumerate(month_dates, 1):
-        filename = f"churn_dataset_{year}{month:02d}.csv"
-        print(f"{i:2d}. {filename}")
-        print(f"    Reference Date: {reference_date}")
-        print(f"    Month: {year}-{month:02d}")
-        print()
+    print("\n📄 Available configurations:")
+    print("   • template_config.json     - Generic template for any domain")
+    print("   • template_config.json     - Generic template for any domain")
+    print("   • batch_config.json        - Optimized for batch processing")
+    print("   • temporal_config.json     - Customer lifecycle patterns")
+    
+    print("\n📖 Creating custom configurations:")
+    print("   1. Copy template_config.json")
+    print("   2. Modify schema, business rules, and target logic")
+    print("   3. See CONFIG_GUIDE.md for complete documentation")
+    
+    print("\n🎯 Domain examples you can create:")
+    print("   • E-commerce (products, orders, customer segments)")
+    print("   • SaaS (subscriptions, usage, feature adoption)")
+    print("   • Finance (transactions, risk scores, compliance)")
+    print("   • Healthcare (patients, treatments, outcomes)")
+    print("   • Education (students, courses, performance)")
 
 
-def show_dataset_schema():
-    """Show the dataset schema that will be generated."""
-    print("\n📋 DATASET SCHEMA:")
-    print("=" * 30)
-    print("Each dataset will contain these columns from the PRD:")
-    print()
+def migration_guide():
+    """Show how to migrate from legacy system."""
     
-    # Key columns from the PRD
-    key_columns = [
-        "FIRST_OF_MONTH", "ACCOUNT_ID", "PERSON_ORG_ID",
-        "PP_SERVICE_CREATED_DATE", "PP_SERVICE_DELETION_DATE", "PP_EXPIRATION_DATE",
-        "PP_PREMIUM_FLAG", "PP_BUNDLE_FLAG", "PP_DISCOUNT_AMT", "PP_NET_AMT",
-        "TERM_IN_MONTHS", "RENEWAL_COUNT", "ALL_PRODUCT_CNT", "ALL_PRODUCT_NET_AMT",
-        "TOTAL_CONTACTS", "BILLING_CONTACTS", "SUCCESS_LOGIN", "TOTAL_LOGIN"
-    ]
+    print("\n🔄 MIGRATION FROM LEGACY SYSTEM")
+    print("=" * 60)
     
-    print("Key columns (subset of 50+ total columns):")
-    for col in key_columns:
-        print(f"  • {col}")
+    print("\n🆕 All generation now uses the config-based system:")
+    print("   python3 config_batch_generator.py --config batch_config.json --rows 1000000")
     
-    print("\n📈 Churn Logic Features:")
-    print("  • Service age and expiration dates")
-    print("  • Product diversity and spend amounts") 
-    print("  • Support contact patterns")
-    print("  • Login activity metrics")
-    print("  • NPS scores and billing issues")
+    print("\n✅ New way (configurable):")
+    print("   python3 config_batch_generator.py --config template_config.json --rows 1000000")
+    
+    print("\n🎉 Benefits of new system:")
+    print("   ✓ Any business domain supported")
+    print("   ✓ Unlimited customization through JSON")
+    print("   ✓ No coding required")
+    print("   ✓ Better data quality and relationships")
+    print("   ✓ Built-in verification and reporting")
 
 
 if __name__ == "__main__":
     example_usage()
-    show_month_details()
-    show_dataset_schema()
+    programmatic_example()
+    configuration_examples()
+    migration_guide()
     
     print("\n" + "=" * 60)
-    print("🚀 TO START GENERATION:")
-    print("   python batch_generate_datasets.py")
-    print("\n⚠️  NOTE: Generation will take 20-30 minutes for 13M total rows")
+    print("🚀 Ready to generate your datasets!")
+    print("📖 See CONFIG_GUIDE.md for complete documentation")
+    print("🔗 Visit README.md for more examples")
     print("=" * 60) 

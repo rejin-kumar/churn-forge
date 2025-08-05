@@ -1,0 +1,219 @@
+{
+  "dataset_config": {
+    "name": "Batch Synthetic Dataset",
+    "description": "Batch-generated synthetic datasets for analysis across multiple months",
+    "version": "1.0",
+    
+    "generation_params": {
+      "n_records": 100000,
+      "random_seed": 42,
+      "reference_date": "2024-07-01",
+      "output_filename": "batch_synthetic_dataset.csv"
+    },
+    
+    "schema": {
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "int",
+          "description": "Unique customer identifier",
+          "generation_method": "sequential",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 1,
+            "max": 999999999
+          }
+        },
+        {
+          "name": "signup_date",
+          "type": "date",
+          "description": "Customer signup date",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "date_range": {"start": "2020-01-01", "end": "2024-11-30"},
+            "distribution": "uniform"
+          }
+        },
+        {
+          "name": "age",
+          "type": "int",
+          "description": "Customer age",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 18,
+            "max": 80,
+            "distribution": "normal"
+          }
+        },
+        {
+          "name": "monthly_spend",
+          "type": "float",
+          "description": "Average monthly spending",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 10.0,
+            "max": 500.0,
+            "distribution": "exponential"
+          }
+        },
+        {
+          "name": "total_spend",
+          "type": "float",
+          "description": "Total customer lifetime spending",
+          "generation_method": "calculated",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "formula": "monthly_spend * 12"
+          }
+        },
+        {
+          "name": "product_count",
+          "type": "int",
+          "description": "Number of products purchased",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 1,
+            "max": 10,
+            "distribution": "exponential"
+          }
+        },
+        {
+          "name": "customer_segment",
+          "type": "string",
+          "description": "Customer segment category",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "choices": ["premium", "standard", "basic"],
+            "probabilities": [0.2, 0.5, 0.3]
+          }
+        },
+        {
+          "name": "support_tickets",
+          "type": "int",
+          "description": "Number of support tickets raised",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 0,
+            "max": 20,
+            "distribution": "exponential"
+          }
+        },
+        {
+          "name": "satisfaction_score",
+          "type": "float",
+          "description": "Customer satisfaction score (1-10)",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 1.0,
+            "max": 10.0,
+            "distribution": "normal"
+          }
+        },
+        {
+          "name": "last_login_days",
+          "type": "int",
+          "description": "Days since last login",
+          "generation_method": "random",
+          "required": true,
+          "nullable": false,
+          "generation_params": {
+            "min": 0,
+            "max": 365,
+            "distribution": "exponential"
+          }
+        }
+      ]
+    },
+    
+    "relationships": [
+      {
+        "type": "correlation",
+        "columns": ["monthly_spend", "satisfaction_score"],
+        "rule": "positive correlation",
+        "strength": 0.6
+      },
+      {
+        "type": "correlation", 
+        "columns": ["support_tickets", "satisfaction_score"],
+        "rule": "negative correlation",
+        "strength": 0.4
+      }
+    ],
+    
+    "target_logic": {
+      "target_column": "risk_score",
+      "scoring_rules": [
+        {
+          "name": "low_spend",
+          "condition": "monthly_spend < 25",
+          "score_impact": 2,
+          "description": "Low monthly spending indicates higher risk"
+        },
+        {
+          "name": "high_support_tickets",
+          "condition": "support_tickets > 5",
+          "score_impact": 1,
+          "description": "High number of support tickets"
+        },
+        {
+          "name": "low_satisfaction",
+          "condition": "satisfaction_score < 5",
+          "score_impact": 3,
+          "description": "Low satisfaction score"
+        },
+        {
+          "name": "inactive_user",
+          "condition": "last_login_days > 90",
+          "score_impact": 2,
+          "description": "User hasn't logged in recently"
+        },
+        {
+          "name": "single_product",
+          "condition": "product_count <= 1",
+          "score_impact": 1,
+          "description": "Customer has only one product"
+        }
+      ],
+      "override_rules": [
+        {
+          "type": "force_negative",
+          "condition": "customer_segment == 'premium' and satisfaction_score > 8",
+          "description": "Force low risk for satisfied premium customers"
+        },
+        {
+          "type": "force_positive",
+          "condition": "support_tickets > 15 and satisfaction_score < 3",
+          "description": "Force high risk for very dissatisfied customers"
+        }
+      ],
+      "noise_percentage": 0.1,
+      "threshold": {
+        "high_risk": 6,
+        "medium_risk": 3,
+        "low_risk": 0
+      }
+    },
+    
+    "data_quality": {
+      "missing_data_percentage": 0.02,
+      "outlier_percentage": 0.01,
+      "duplicate_percentage": 0.005
+    }
+  }
+} 

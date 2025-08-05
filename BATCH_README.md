@@ -1,60 +1,134 @@
 # 🔄 Batch Churn Dataset Generator
 
-This system generates synthetic churn datasets for **13 months** (July 2024 to July 2025), with each dataset containing **1 million customer records**.
+This system generates synthetic churn datasets for **multiple months** with **configurable record counts** per dataset, supporting any business domain through JSON configuration files.
+
+## ✨ NEW: Configuration-Based System
+
+🚀 **Now supports any domain through JSON configuration!** The batch generator has been upgraded to use the flexible configuration system:
+
+### **New Config-Based Usage**
+```bash
+# Generate batch datasets for any domain
+python3 config_batch_generator.py --config batch_config.json --rows 100000 --num-months 6
+
+# Use hosting domain configuration for batch generation
+python3 config_batch_generator.py --config template_config.json --rows 1000000 --num-months 13
+
+# Create custom domain-specific batch datasets
+python3 config_batch_generator.py --config my_ecommerce_config.json --rows 500000 --verify
+```
+
+### **Advanced Batch Configuration**
+The new system supports sophisticated batch generation through configuration:
+
+```json
+{
+  "dataset_config": {
+    "name": "E-commerce Batch Dataset",
+    "generation_params": {
+      "n_records": 1000000,
+      "random_seed": 42,
+      "output_filename": "ecommerce_batch.csv"
+    },
+    "schema": {
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "int",
+          "generation_method": "sequential"
+        },
+        {
+          "name": "purchase_amount",
+          "type": "float",
+          "generation_method": "random",
+          "generation_params": {
+            "min": 10.0,
+            "max": 1000.0,
+            "distribution": "exponential"
+          }
+        }
+      ]
+    },
+    "target_logic": {
+      "scoring_rules": [
+        {
+          "condition": "purchase_amount < 50",
+          "score_impact": 2
+        }
+      ]
+    }
+  }
+}
+```
+
+### **Benefits of Config-Based System**
+✅ **Domain-Agnostic**: Works for any business (e-commerce, SaaS, finance, etc.)  
+✅ **No Coding Required**: Everything configured through JSON  
+✅ **Flexible Schema**: Define unlimited columns with custom generation rules  
+✅ **Business Logic**: Configurable scoring rules and relationships  
+✅ **Verification Built-In**: Automatic quality checks and reporting  
+
+📖 **Complete Configuration Guide**: See `CONFIG_GUIDE.md` for details on creating custom batch configurations.
+
+---
 
 ## 📁 Files
 
-| File | Description |
-|------|-------------|
-| `batch_generate_datasets.py` | Main batch generation script |
-| `batch_usage_example.py` | Usage examples and documentation |
-| `generate_churn_dataset.py` | Core dataset generator (existing) |
-| `PRD.md` | Product requirements and schema |
+| File | Description | Status |
+|------|-------------|--------|
+| `config_batch_generator.py` | **NEW** - Config-based batch generation script | ✅ Recommended |
+| `batch_config.json` | **NEW** - Batch configuration template | ✅ Recommended |
+| `batch_usage_example.py` | Usage examples and documentation | ✅ Updated |
+| `template_config.json` | Generic template for any domain | 📝 Template |
+| `PRD.md` | Product requirements and schema | 📖 Reference |
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### **Recommended: Configuration-Based Usage**
 ```bash
-# Generate all 13 datasets with default settings
-python batch_generate_datasets.py
+# Generate batch datasets with any configuration
+python3 config_batch_generator.py --config template_config.json --rows 100000 --num-months 3
+
+# Production-scale batch generation
+python3 config_batch_generator.py --config template_config.json --rows 1000000 --num-months 13 --verify
+
+# Custom configuration with summary report
+python3 config_batch_generator.py --config batch_config.json --rows 500000 --num-months 6 --summary
 ```
 
-### Custom Usage
+### **Alternative: Using Different Configurations**
 ```bash
-# Custom row count and output directory
-python batch_generate_datasets.py --rows 500000 --output-dir my_datasets
+# Generate with hosting domain configuration
+python3 config_batch_generator.py --config template_config.json --rows 500000 --num-months 6
 
-# With specific seed for reproducibility
-python batch_generate_datasets.py --seed 123 --verify
+# Generate with temporal lifecycle patterns
+python3 config_batch_generator.py --config temporal_config.json --rows 100000 --num-months 12
+
+# Generate with custom configuration
+python3 config_batch_generator.py --config my_custom_config.json --rows 250000 --verify
 ```
 
 ## 📊 What Gets Generated
 
-### Datasets
-- **13 monthly datasets** (July 2024 → July 2025)
-- **1,000,000 rows** per dataset (configurable)
-- **50+ columns** per dataset (follows PRD schema)
-- **~230 MB** per CSV file
-- **~3 GB** total data
+### **Config-Based Output (New)**
+- **Configurable months** (any period you specify)
+- **Configurable rows** per dataset
+- **Unlimited columns** (defined in your config)
+- **Custom filename patterns** based on dataset name
+- **Domain-specific business logic** and relationships
+- **Automatic verification** and quality reports
 
-### Output Files
+### **Sample Config-Based Output Files**
 ```
-datasets/
-├── churn_dataset_202407.csv  # July 2024
-├── churn_dataset_202408.csv  # August 2024
-├── churn_dataset_202409.csv  # September 2024
-├── churn_dataset_202410.csv  # October 2024
-├── churn_dataset_202411.csv  # November 2024
-├── churn_dataset_202412.csv  # December 2024
-├── churn_dataset_202501.csv  # January 2025
-├── churn_dataset_202502.csv  # February 2025
-├── churn_dataset_202503.csv  # March 2025
-├── churn_dataset_202504.csv  # April 2025
-├── churn_dataset_202505.csv  # May 2025
-├── churn_dataset_202506.csv  # June 2025
-├── churn_dataset_202507.csv  # July 2025
-└── batch_generation.log      # Generation log
+batch_datasets/
+├── my_ecommerce_dataset_202407.csv   # July 2024
+├── my_ecommerce_dataset_202408.csv   # August 2024
+├── my_ecommerce_dataset_202409.csv   # September 2024
+├── batch_summary_report.csv          # Analytics summary
+└── batch_generation.log              # Generation logs
 ```
+
+
 
 ## ⚙️ Command Line Options
 

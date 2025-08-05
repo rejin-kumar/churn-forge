@@ -2,6 +2,58 @@
 
 The **Temporal Churn Dataset Generator** creates realistic customer churn datasets that evolve over time, simulating a true customer lifecycle with behavioral patterns, churn events, and new customer acquisition.
 
+## ✨ NEW: Configuration-Based System
+
+🚀 **Now supports any domain through JSON configuration!** The temporal generator has been upgraded to use the flexible configuration system:
+
+### **New Config-Based Usage**
+```bash
+# Use any configuration for temporal generation
+python3 config_temporal_generator.py --config temporal_config.json --months 12
+
+# Use hosting domain config with temporal evolution
+python3 config_temporal_generator.py --config template_config.json --initial-customers 1000 --monthly-new 50
+
+# Create your own domain-specific temporal config
+python3 config_temporal_generator.py --config my_saas_temporal_config.json
+```
+
+### **Advanced Temporal Configuration**
+The new system supports sophisticated temporal behavior through configuration:
+
+```json
+{
+  "temporal_config": {
+    "lifecycle_behavior": {
+      "monthly_churn_rate": 0.025,
+      "seasonal_effects": {
+        "high_churn_months": [1, 6, 12],
+        "low_churn_months": [3, 9]
+      }
+    },
+    "behavioral_evolution": {
+      "login_activity": {
+        "degradation_rate": 0.15,
+        "improvement_rate": 0.05
+      },
+      "spending_patterns": {
+        "churn_reduction_rate": 0.25,
+        "loyalty_increase_rate": 0.1
+      }
+    },
+    "customer_segments": {
+      "high_value": {"churn_resistance": 0.7},
+      "at_risk": {"early_warning_months": 3},
+      "loyal": {"churn_rate_reduction": 0.6}
+    }
+  }
+}
+```
+
+📖 **Complete Configuration Guide**: See `CONFIG_GUIDE.md` for details on creating custom temporal configurations.
+
+---
+
 ## 🎯 Key Features
 
 ### 🔄 Customer Lifecycle Management
@@ -18,29 +70,55 @@ The **Temporal Churn Dataset Generator** creates realistic customer churn datase
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### **Recommended: Configuration-Based Usage**
 ```bash
-# Generate 12 months of temporal data
-python temporal_batch_generator.py
+# Generate 12 months of temporal data with any domain
+python3 config_temporal_generator.py --config temporal_config.json --months 12
 
-# Custom parameters
-python temporal_batch_generator.py --initial-customers 500 --monthly-new 25 --months 6
+# Custom parameters with configuration override
+python3 config_temporal_generator.py --config template_config.json --initial-customers 500 --monthly-new 25 --months 6
 ```
 
-### Programmatic Usage
-```python
-from temporal_batch_generator import TemporalBatchGenerator
+### **Alternative: CLI with Different Configurations**
+```bash
+# Generate using hosting domain configuration
+python3 config_temporal_generator.py --config template_config.json --months 6
 
-# Create generator
-generator = TemporalBatchGenerator(
-    initial_customers=1000,      # Starting customer base
-    monthly_new_customers=50,    # New customers each month
-    random_seed=42,
-    output_dir="temporal_data"
-)
+# Generate using batch-optimized configuration
+python3 config_temporal_generator.py --config batch_config.json --initial-customers 500 --monthly-new 25
+```
+
+### Programmatic Usage (Config-Based)
+```python
+from config_temporal_generator import ConfigTemporalGenerator
+
+# Create generator with any configuration
+generator = ConfigTemporalGenerator('temporal_config.json')
+
+# Override settings if needed
+generator.initial_customers = 1000
+generator.monthly_new_customers = 50
+generator.num_months = 12
 
 # Generate datasets
-files = generator.generate_all_datasets(num_months=12)
+files = generator.generate_all_datasets()
+```
+
+### Programmatic Usage (Alternative Config)
+```python
+from config_temporal_generator import ConfigTemporalGenerator
+
+# Create generator with different configuration
+generator = ConfigTemporalGenerator('template_config.json')
+
+# Override settings for specific needs
+generator.initial_customers = 1000
+generator.monthly_new_customers = 50
+generator.num_months = 12
+generator.output_dir = "hosting_temporal_data"
+
+# Generate datasets
+files = generator.generate_all_datasets()
 ```
 
 ## 📋 Command Line Options

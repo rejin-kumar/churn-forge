@@ -30,24 +30,24 @@ The **Temporal Churn Dataset Generator** creates realistic customer lifecycle da
    - Dates, service ages, renewal counts evolve properly
    - Related metrics stay correlated
 
-## 📁 Files Created
+## 📁 File Structure
 
-| File | Purpose |
-|------|---------|
-| `temporal_batch_generator.py` | Main temporal generator implementation |
-| `temporal_usage_example.py` | Usage examples and analysis demonstrations |
-| `TEMPORAL_README.md` | Comprehensive documentation |
-| `TEMPORAL_SUMMARY.md` | This summary |
+| File | Description |
+|------|-------------|
+| `config_temporal_generator.py` | **NEW** - Configuration-based temporal generator |
+| `temporal_config.json` | Temporal behavior configuration |
+| `temporal_usage_example.py` | Usage examples and analysis |
+| `CONFIG_GUIDE.md` | Complete configuration documentation |
 
-## 🚀 Usage Examples
+## 🚀 Quick Start
 
 ### Basic Generation
 ```bash
-# Generate 12 months of data (default)
-python3 temporal_batch_generator.py
+# Generate 6 months of temporal customer data
+python3 config_temporal_generator.py --config temporal_config.json --months 6
 
 # Custom parameters
-python3 temporal_batch_generator.py --initial-customers 500 --monthly-new 25 --months 6
+python3 config_temporal_generator.py --config template_config.json --initial-customers 500 --monthly-new 25 --months 6
 ```
 
 ### Analysis & Insights
@@ -151,5 +151,5 @@ The temporal generator is fully functional and tested:
 
 **Start generating temporal data:**
 ```bash
-python3 temporal_batch_generator.py --initial-customers 1000 --months 12
+python3 config_temporal_generator.py --config temporal_config.json --initial-customers 1000 --months 12
 ``` 

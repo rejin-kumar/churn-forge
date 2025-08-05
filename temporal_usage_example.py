@@ -1,276 +1,279 @@
 #!/usr/bin/env python3
 """
-Temporal Churn Dataset Generator - Usage Examples
+Config-Based Temporal Dataset Generator - Usage Examples
 
-This script demonstrates how to use the temporal batch generator
-and shows expected outputs and behavior patterns.
+This script demonstrates how to use the new configuration-based temporal generator
+for realistic customer lifecycle datasets across any business domain.
 """
 
 import os
 import pandas as pd
-from temporal_batch_generator import TemporalBatchGenerator
+from config_temporal_generator import ConfigTemporalGenerator
 
 
 def example_basic_usage():
-    """Basic usage example with default settings."""
-    print("🚀 EXAMPLE 1: Basic Temporal Generation")
-    print("=" * 50)
-    print("Generating 6 months of data with customer evolution...")
-    
-    # Create generator with smaller dataset for demo
-    generator = TemporalBatchGenerator(
-        initial_customers=100,     # Start with 100 customers
-        monthly_new_customers=10,  # Add 10 new customers each month
-        random_seed=42,
-        output_dir="demo_temporal"
-    )
-    
-    # Generate 6 months of data
-    files = generator.generate_all_datasets(num_months=6)
-    
-    print(f"\n✅ Generated {len(files)} files:")
-    for file in files:
-        print(f"   📁 {os.path.basename(file)}")
-    
-    return files
-
-
-def example_analyze_churn_patterns(files):
-    """Analyze churn patterns across the generated datasets."""
-    print("\n\n🔍 EXAMPLE 2: Analyzing Churn Patterns")
-    print("=" * 50)
-    
-    monthly_stats = []
-    customer_lifecycles = {}
-    
-    for file in files:
-        month = os.path.basename(file).replace('.csv', '')
-        df = pd.read_csv(file)
-        
-        # Track customer counts
-        customers_this_month = set(df['ACCOUNT_ID'])
-        
-        # Calculate stats
-        stats = {
-            'month': month,
-            'total_customers': len(df),
-            'new_customers': len(customers_this_month - set(customer_lifecycles.keys())),
-            'avg_login_success': df['SUCCESS_LOGIN'].mean(),
-            'avg_support_contacts': df['TOTAL_CONTACTS'].mean(),
-            'avg_billing_contacts': df['BILLING_CONTACTS'].mean(),
-            'avg_product_count': df['ALL_PRODUCT_CNT'].mean(),
-            'avg_spend': df['ALL_PRODUCT_NET_AMT'].mean()
-        }
-        
-        # Calculate churn from previous month
-        if monthly_stats:
-            prev_customers = set()
-            if len(monthly_stats) > 0:
-                prev_file = files[len(monthly_stats)-1]
-                prev_df = pd.read_csv(prev_file)
-                prev_customers = set(prev_df['ACCOUNT_ID'])
-            
-            churned = prev_customers - customers_this_month
-            stats['churned_customers'] = len(churned)
-            stats['churn_rate'] = (len(churned) / len(prev_customers) * 100) if prev_customers else 0
-        else:
-            stats['churned_customers'] = 0
-            stats['churn_rate'] = 0
-        
-        monthly_stats.append(stats)
-        
-        # Update customer lifecycle tracking
-        for customer_id in customers_this_month:
-            if customer_id not in customer_lifecycles:
-                customer_lifecycles[customer_id] = []
-            customer_lifecycles[customer_id].append(month)
-    
-    # Display analysis
-    print("📊 Monthly Statistics:")
-    print("-" * 100)
-    print(f"{'Month':<8} {'Customers':<10} {'New':<5} {'Churned':<8} {'Churn%':<8} {'AvgLogin':<9} {'AvgSupport':<10} {'AvgSpend':<10}")
-    print("-" * 100)
-    
-    for stats in monthly_stats:
-        print(f"{stats['month']:<8} {stats['total_customers']:<10} "
-              f"{stats['new_customers']:<5} {stats['churned_customers']:<8} "
-              f"{stats['churn_rate']:<8.1f} {stats['avg_login_success']:<9.1f} "
-              f"{stats['avg_support_contacts']:<10.1f} {stats['avg_spend']:<10.1f}")
-    
-    # Analyze customer lifecycles
-    lifecycle_lengths = [len(months) for months in customer_lifecycles.values()]
-    
-    print(f"\n👥 Customer Lifecycle Analysis:")
-    print(f"   Total unique customers: {len(customer_lifecycles)}")
-    print(f"   Average lifecycle length: {sum(lifecycle_lengths)/len(lifecycle_lengths):.1f} months")
-    print(f"   Shortest lifecycle: {min(lifecycle_lengths)} months")
-    print(f"   Longest lifecycle: {max(lifecycle_lengths)} months")
-    
-    # Find customers who churned quickly (outliers)
-    quick_churners = [cid for cid, months in customer_lifecycles.items() if len(months) <= 2]
-    long_survivors = [cid for cid, months in customer_lifecycles.items() if len(months) >= 5]
-    
-    print(f"   Quick churners (≤2 months): {len(quick_churners)}")
-    print(f"   Long survivors (≥5 months): {len(long_survivors)}")
-
-
-def example_churn_behavior_analysis(files):
-    """Analyze specific churn behavior patterns."""
-    print("\n\n🎯 EXAMPLE 3: Churn Behavior Pattern Analysis")
-    print("=" * 50)
-    
-    # Load all data
-    all_data = []
-    for file in files:
-        month = os.path.basename(file).replace('.csv', '')
-        df = pd.read_csv(file)
-        df['month'] = month
-        all_data.append(df)
-    
-    combined_df = pd.concat(all_data, ignore_index=True)
-    
-    # Track customer behavior over time
-    customer_evolution = {}
-    
-    for _, row in combined_df.iterrows():
-        customer_id = row['ACCOUNT_ID']
-        month = row['month']
-        
-        if customer_id not in customer_evolution:
-            customer_evolution[customer_id] = {}
-        
-        customer_evolution[customer_id][month] = {
-            'success_login': row['SUCCESS_LOGIN'],
-            'total_contacts': row['TOTAL_CONTACTS'],
-            'billing_contacts': row['BILLING_CONTACTS'],
-            'product_count': row['ALL_PRODUCT_CNT'],
-            'spend': row['ALL_PRODUCT_NET_AMT']
-        }
-    
-    # Identify churned customers (appeared in early months but not recent)
-    months = sorted(combined_df['month'].unique())
-    early_customers = set(combined_df[combined_df['month'] == months[0]]['ACCOUNT_ID'])
-    recent_customers = set(combined_df[combined_df['month'] == months[-1]]['ACCOUNT_ID'])
-    churned_customers = early_customers - recent_customers
-    
-    print(f"🔍 Analyzing behavior patterns for {len(churned_customers)} churned customers:")
-    
-    # Analyze patterns before churn
-    churn_signals = {
-        'decreasing_logins': 0,
-        'increasing_support': 0,
-        'increasing_billing': 0,
-        'decreasing_products': 0,
-        'decreasing_spend': 0
-    }
-    
-    for customer_id in list(churned_customers)[:10]:  # Sample first 10
-        customer_data = customer_evolution[customer_id]
-        customer_months = sorted(customer_data.keys())
-        
-        if len(customer_months) >= 2:
-            first_month = customer_data[customer_months[0]]
-            last_month = customer_data[customer_months[-1]]
-            
-            # Check for churn signals
-            if last_month['success_login'] < first_month['success_login'] * 0.7:
-                churn_signals['decreasing_logins'] += 1
-            
-            if last_month['total_contacts'] > first_month['total_contacts'] * 1.3:
-                churn_signals['increasing_support'] += 1
-            
-            if last_month['billing_contacts'] > first_month['billing_contacts']:
-                churn_signals['increasing_billing'] += 1
-            
-            if last_month['product_count'] < first_month['product_count'] * 0.8:
-                churn_signals['decreasing_products'] += 1
-            
-            if last_month['spend'] < first_month['spend'] * 0.8:
-                churn_signals['decreasing_spend'] += 1
-    
-    print("\n📈 Churn Signal Analysis (% of churned customers showing pattern):")
-    sample_size = min(10, len(churned_customers))
-    for signal, count in churn_signals.items():
-        percentage = (count / sample_size) * 100
-        print(f"   {signal.replace('_', ' ').title()}: {percentage:.1f}% ({count}/{sample_size})")
-
-
-def example_outlier_detection(files):
-    """Detect and analyze outlier customers."""
-    print("\n\n🎭 EXAMPLE 4: Outlier Customer Detection")
-    print("=" * 50)
-    
-    # Load latest month data
-    latest_file = files[-1]
-    df = pd.read_csv(latest_file)
-    
-    # Define outlier criteria
-    outliers = {
-        'high_spenders': df[df['ALL_PRODUCT_NET_AMT'] > df['ALL_PRODUCT_NET_AMT'].quantile(0.95)],
-        'login_addicts': df[df['SUCCESS_LOGIN'] > df['SUCCESS_LOGIN'].quantile(0.95)],
-        'support_heavy': df[df['TOTAL_CONTACTS'] > df['TOTAL_CONTACTS'].quantile(0.95)],
-        'product_hoarders': df[df['ALL_PRODUCT_CNT'] > df['ALL_PRODUCT_CNT'].quantile(0.95)]
-    }
-    
-    print("🔍 Outlier Customer Analysis:")
-    print("-" * 60)
-    
-    for outlier_type, outlier_df in outliers.items():
-        if len(outlier_df) > 0:
-            print(f"\n{outlier_type.replace('_', ' ').title()} ({len(outlier_df)} customers):")
-            
-            if outlier_type == 'high_spenders':
-                avg_spend = outlier_df['ALL_PRODUCT_NET_AMT'].mean()
-                print(f"   Average spend: ${avg_spend:.2f}")
-                print(f"   Spend range: ${outlier_df['ALL_PRODUCT_NET_AMT'].min():.2f} - ${outlier_df['ALL_PRODUCT_NET_AMT'].max():.2f}")
-            
-            elif outlier_type == 'login_addicts':
-                avg_logins = outlier_df['SUCCESS_LOGIN'].mean()
-                print(f"   Average successful logins: {avg_logins:.1f}")
-                print(f"   Login range: {outlier_df['SUCCESS_LOGIN'].min()} - {outlier_df['SUCCESS_LOGIN'].max()}")
-            
-            elif outlier_type == 'support_heavy':
-                avg_contacts = outlier_df['TOTAL_CONTACTS'].mean()
-                avg_billing = outlier_df['BILLING_CONTACTS'].mean()
-                print(f"   Average total contacts: {avg_contacts:.1f}")
-                print(f"   Average billing contacts: {avg_billing:.1f}")
-            
-            elif outlier_type == 'product_hoarders':
-                avg_products = outlier_df['ALL_PRODUCT_CNT'].mean()
-                print(f"   Average product count: {avg_products:.1f}")
-                print(f"   Product range: {outlier_df['ALL_PRODUCT_CNT'].min()} - {outlier_df['ALL_PRODUCT_CNT'].max()}")
-
-
-def main():
-    """Run all examples."""
-    print("🎯 TEMPORAL CHURN DATASET GENERATOR - EXAMPLES")
+    """Basic usage example with template configuration."""
+    print("🚀 EXAMPLE 1: Basic Temporal Generation with Template Config")
     print("=" * 60)
-    print("This script demonstrates the temporal dataset generator")
-    print("and analyzes the realistic churn patterns it creates.")
+    print("Generating customer lifecycle data using template_config.json...")
+    
+    # Create generator with template configuration
+    # Note: This will use template_config.json as base for column definitions
+    generator = ConfigTemporalGenerator('template_config.json')
+    
+    # Override some settings for demo
+    generator.initial_customers = 100      # Start with 100 customers  
+    generator.monthly_new_customers = 10   # Add 10 new customers each month
+    generator.num_months = 6               # Generate 6 months
+    generator.output_dir = "demo_temporal"
+    
+    # Generate temporal datasets
+    files = generator.generate_all_datasets()
+    
+    print(f"\n✅ Generated {len(files)} monthly datasets:")
+    for file in files:
+        print(f"   📄 {file}")
+    
+    # Show customer evolution
+    analyze_customer_evolution(files)
+
+
+def example_domain_specific():
+    """Example using hosting configuration for domain-specific temporal generation."""
+    print("\n🏢 EXAMPLE 2: Domain-Specific Temporal Generation")
+    print("=" * 60)
+    print("Generating hosting/domain service customer lifecycle...")
+    
+    # Create generator with hosting domain configuration
+    generator = ConfigTemporalGenerator('template_config.json')
+    
+    # Custom settings for hosting domain
+    generator.initial_customers = 500
+    generator.monthly_new_customers = 25
+    generator.num_months = 12
+    generator.output_dir = "hosting_temporal"
+    
+    print(f"\n📊 Configuration:")
+    print(f"   • Domain: {generator.temporal_config['name']}")
+    print(f"   • Initial customers: {generator.initial_customers}")
+    print(f"   • Monthly new customers: {generator.monthly_new_customers}")
+    print(f"   • Number of months: {generator.num_months}")
+    print(f"   • Base configuration: {generator.temporal_config.get('base_config_path', 'template_config.json')}")
+    
+    # Note: Uncomment to actually generate (takes time)
+    # files = generator.generate_all_datasets()
+    print("\n💡 To run: Uncomment the generation line above")
+
+
+def example_custom_temporal_config():
+    """Example showing custom temporal configuration."""
+    print("\n⚙️ EXAMPLE 3: Custom Temporal Configuration")
     print("=" * 60)
     
-    # Run basic generation
-    files = example_basic_usage()
+    print("📝 Creating custom temporal configuration for SaaS business:")
     
-    if files:
-        # Run analysis examples
-        example_analyze_churn_patterns(files)
-        example_churn_behavior_analysis(files)
-        example_outlier_detection(files)
+    custom_config = {
+        "temporal_config": {
+            "name": "SaaS Customer Lifecycle",
+            "description": "SaaS subscription lifecycle with realistic patterns",
+            "base_config_path": "template_config.json",
+            "temporal_params": {
+                "initial_customers": 1000,
+                "monthly_new_customers": 100,
+                "num_months": 12,
+                "output_dir": "saas_temporal"
+            },
+            "lifecycle_behavior": {
+                "monthly_attrition_rate": 0.035,  # 3.5% monthly churn for SaaS
+                "new_customer_protection_months": 3,  # 3-month honeymoon period
+                "seasonal_effects": {
+                    "enabled": True,
+                    "high_attrition_months": [1, 12],  # New Year and end of year
+                    "low_attrition_months": [6, 7, 8]  # Summer stability
+                }
+            },
+            "customer_segments": {
+                "enterprise": {
+                    "percentage": 0.1,
+                    "retention_bonus": 0.8,
+                    "spend_threshold": 1000
+                },
+                "startup": {
+                    "percentage": 0.3,
+                    "retention_bonus": 0.4,
+                    "growth_potential": 1.5
+                }
+            }
+        }
+    }
+    
+    print("\n📋 Custom Configuration Features:")
+    print("   • SaaS-specific churn rate (3.5% monthly)")
+    print("   • New customer protection period (3 months)")
+    print("   • Seasonal churn patterns")
+    print("   • Enterprise vs Startup customer segments")
+    print("   • Growth and retention modeling")
+    
+    print("\n💡 To use this configuration:")
+    print("   1. Save the config to 'saas_temporal_config.json'")
+    print("   2. Run: python3 config_temporal_generator.py --config saas_temporal_config.json")
+
+
+def example_cli_usage():
+    """Show command line usage examples."""
+    print("\n💻 EXAMPLE 4: Command Line Usage")
+    print("=" * 60)
+    
+    print("🚀 Quick start commands:")
+    print("\n1️⃣ Generic temporal generation:")
+    print("   python3 config_temporal_generator.py --config template_config.json --months 6")
+    
+    print("\n2️⃣ Domain-specific with overrides:")
+    print("   python3 config_temporal_generator.py --config template_config.json \\")
+    print("       --initial-customers 1000 --monthly-new 50 --months 12")
+    
+    print("\n3️⃣ Custom output directory:")
+    print("   python3 config_temporal_generator.py --config template_config.json \\")
+    print("       --months 3 --output-dir my_temporal_data")
+    
+    print("\n4️⃣ Production scale:")
+    print("   python3 config_temporal_generator.py --config template_config.json \\")
+    print("       --initial-customers 10000 --monthly-new 500 --months 24")
+
+
+def analyze_customer_evolution(files):
+    """Analyze customer evolution patterns from generated files."""
+    if not files or not os.path.exists(files[0]):
+        print("\n⚠️ No files to analyze (generation may have been skipped)")
+        return
         
-        print("\n\n🎉 EXAMPLES COMPLETED!")
-        print("=" * 40)
-        print("Key takeaways:")
-        print("✅ Customers show realistic evolution over time")
-        print("✅ Churn patterns are observable in behavior changes")
-        print("✅ Monthly churn rate stays around 2-3%")
-        print("✅ New customers are added each month")
-        print("✅ Outlier behaviors are included (~5% of customers)")
-        print("\nCheck the 'demo_temporal' directory for generated files!")
+    print("\n📊 CUSTOMER EVOLUTION ANALYSIS")
+    print("-" * 40)
     
-    else:
-        print("❌ No files were generated. Check for errors above.")
+    try:
+        # Read first and last files
+        first_df = pd.read_csv(files[0])
+        last_df = pd.read_csv(files[-1])
+        
+        print(f"\n📈 Customer Growth:")
+        print(f"   Month 1: {len(first_df):,} customers")
+        print(f"   Month {len(files)}: {len(last_df):,} customers")
+        print(f"   Net Growth: {len(last_df) - len(first_df):,} customers")
+        
+        # Analyze status distribution if available
+        if 'CUSTOMER_STATUS' in last_df.columns:
+            status_counts = last_df['CUSTOMER_STATUS'].value_counts()
+            print(f"\n📊 Customer Status Distribution (Month {len(files)}):")
+            for status, count in status_counts.items():
+                percentage = (count / len(last_df)) * 100
+                print(f"   • {status}: {count:,} ({percentage:.1f}%)")
+        
+        # Analyze risk scores if available
+        risk_columns = [col for col in last_df.columns if 'risk' in col.lower() or 'score' in col.lower()]
+        if risk_columns:
+            risk_col = risk_columns[0]
+            print(f"\n🎯 Risk Score Analysis ({risk_col}):")
+            print(f"   • Mean: {last_df[risk_col].mean():.2f}")
+            print(f"   • Std: {last_df[risk_col].std():.2f}")
+            print(f"   • High Risk (>6): {(last_df[risk_col] > 6).sum():,} customers")
+        
+    except Exception as e:
+        print(f"\n⚠️ Analysis error: {e}")
+
+
+def show_configuration_options():
+    """Show available configuration options."""
+    print("\n⚙️ CONFIGURATION OPTIONS")
+    print("=" * 60)
+    
+    print("\n📁 Available Configurations:")
+    configs = [
+        ("template_config.json", "Generic template", "Any domain"),
+        ("template_config.json", "Generic template", "Simple schema, any domain"),
+        ("batch_config.json", "Batch processing", "Optimized for large datasets"),
+        ("temporal_config.json", "Customer lifecycle", "Advanced temporal patterns")
+    ]
+    
+    for config, description, features in configs:
+        print(f"   📄 {config}")
+        print(f"      • {description}")
+        print(f"      • {features}")
+        print()
+    
+    print("🎯 Creating Custom Configurations:")
+    print("   1. Start with template_config.json")
+    print("   2. Add temporal_config section for lifecycle behavior")
+    print("   3. Define customer segments and behavioral evolution")
+    print("   4. Set seasonal patterns and risk prediction features")
+    print("   5. See CONFIG_GUIDE.md for complete documentation")
+
+
+def show_temporal_features():
+    """Show temporal-specific features."""
+    print("\n🕰️ TEMPORAL FEATURES")
+    print("=" * 60)
+    
+    print("🔄 Customer Lifecycle Management:")
+    print("   • Customer state tracking across months")
+    print("   • Realistic attrition/departure patterns")
+    print("   • New customer acquisition each month")
+    print("   • Behavioral evolution over time")
+    
+    print("\n📊 Behavioral Patterns:")
+    print("   • Login activity degradation before departure")
+    print("   • Spending pattern changes")
+    print("   • Support ticket trends")
+    print("   • Satisfaction score evolution")
+    
+    print("\n🎯 Advanced Features:")
+    print("   • Customer segmentation (high-value, at-risk, loyal)")
+    print("   • Seasonal effects on behavior")
+    print("   • Early warning signals (1-3 months ahead)")
+    print("   • Intervention modeling potential")
+    
+    print("\n📈 ML-Ready Outputs:")
+    print("   • Time-series features for prediction models")
+    print("   • Customer journey tracking")
+    print("   • Risk probability scores")
+    print("   • Lifecycle stage classification")
+
+
+def migration_from_legacy():
+    """Show migration from legacy temporal system."""
+    print("\n🔄 MIGRATION FROM LEGACY SYSTEM")
+    print("=" * 60)
+    
+    print("🆕 All generation now uses the config-based system:")
+    print("   from config_temporal_generator import ConfigTemporalGenerator")
+    print("   generator = ConfigTemporalGenerator('temporal_config.json')")
+    print("   files = generator.generate_all_datasets()")
+    
+    print("\n✅ New way (configurable):")
+    print("   from config_temporal_generator import ConfigTemporalGenerator")
+    print("   generator = ConfigTemporalGenerator('temporal_config.json')")
+    print("   files = generator.generate_all_datasets()")
+    
+    print("\n🎉 Benefits of Migration:")
+    print("   ✓ Any business domain supported")
+    print("   ✓ Flexible customer lifecycle modeling")
+    print("   ✓ Advanced behavioral evolution patterns")
+    print("   ✓ Better seasonal and segment modeling")
+    print("   ✓ No coding required for customization")
+    print("   ✓ JSON-driven configuration")
 
 
 if __name__ == "__main__":
-    main() 
+    example_basic_usage()
+    example_domain_specific()
+    example_custom_temporal_config()
+    example_cli_usage()
+    show_configuration_options()
+    show_temporal_features()
+    migration_from_legacy()
+    
+    print("\n" + "=" * 60)
+    print("🚀 Ready to generate temporal datasets!")
+    print("📖 See CONFIG_GUIDE.md for temporal configuration details")
+    print("📊 See TEMPORAL_README.md for complete documentation")
+    print("🔗 Visit README.md for more examples")
+    print("=" * 60) 
